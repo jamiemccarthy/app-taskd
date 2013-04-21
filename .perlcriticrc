@@ -1,0 +1,27 @@
+include      = NamingConventions ClassHierarchies CodeLayout Modules
+allow-unsafe = 0
+pager        = less
+severity     = stern
+top          = 10
+
+[TestingAndDebugging::RequireUseStrict]
+severity = 5
+
+[TestingAndDebugging::RequireUseWarnings]
+severity = 5
+
+[Variables::ProhibitPackageVars]
+severity = 2
+
+[ControlStructures::ProhibitPostfixControls]
+allow = if unless
+severity = cruel
+
+[-ValuesAndExpressions::ProhibitMagicNumbers]
+
+[CodeLayout::ProhibitHardTabs]
+severity = 1
+
+[InputOutput::ProhibitBarewordFileHandles]
+[Miscellanea::ProhibitTies]
+
