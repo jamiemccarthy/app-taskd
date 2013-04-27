@@ -15,6 +15,8 @@ sub new {
 
     for my $option (qw(
         log_adapter_class
+        task_classes
+        dbh
     )) {
         $self->{option}{$option} = $param{$option} if exists( $param{$option} );
     }
@@ -22,33 +24,34 @@ sub new {
     $self->{logger} = Log::Any->get_logger( category => ref( $self ) );
     Log::Any::Adapter->set( $param{log_adapter_class} ) if $param{log_adapter_class};
 
-    $self->{pids} = { };
     $self->{conditional_level} = 0;
-    $self->{schedule_cron} = Schedule::Cron->new(
-        sub { die "App::Taskd's null dispatcher for Schedule::Cron was called; there's a bug somehwere" }
-    );
+    $self->{dbh} = $self->{option}{dbh} // undef;
+    $self->{pids} = { };
     $self->{resource_usage} = { };
+    $self->{task_classes} = $self->{option}{task_classes} || [ ];
 
     bless $self, $class;
     return $self;
 }
 
+sub get_task_classes {
+    my( $self ) = @_;
+    return $self->{task_classes} ||= [ ];
+}
+
 sub run {
     my( $self ) = @_;
 
-    init_cron();
-    process_tasks();
-    init_event_ar();
-    $task_exit_flag = 0;
-    set_signal_handlers_and_daemonize();
-    main_loop();
+    $self->process_tasks();
+    $self->init_event_ar();
+    $self->clear_task_exit_flag();
+    $self->set_signal_handlers_and_daemonize();
+    $self->main_loop();
     exit 0;
 }
 
 sub get_logger {
     my ( $self ) = @_;
-    if ( ! $self->{logger} ) {
-    }
     return $self->{logger};
 }
 
@@ -69,6 +72,11 @@ sub get_conditional_level {
 sub set_conditional_level {
     my( $self, $new_level ) = @_;
     return $self->{conditional_level} = $new_level;
+}
+
+sub clear_task_exit_flag {
+    my( $self ) = @_;
+    $self->{task_exit_flag} = 0;
 }
 
 __DATA__
